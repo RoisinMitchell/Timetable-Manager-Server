@@ -9,7 +9,7 @@ public class ClientServerConnection {
 
     public static void main(String[] args) {
         try {
-            System.out.println("Opening port...\n");
+            System.out.println("\nOpening port...\n");
             servSock = new ServerSocket(PORT);
             controller = new ApplicationController();
             run();
@@ -37,52 +37,49 @@ public class ClientServerConnection {
                 String response = processRequest(request);
 
                 dataOutputStream.writeUTF(response);
-                System.out.println("Response sent: " + response);
+                System.out.println("Response sent: " + response + "\n");
             }
         } while (connected);
     }
 
-    private static String processRequest(String request) throws IncorrectActionException {
+    private static String processRequest(String request){
         RequestParser parser = new RequestParser();
         String requestType = parser.getRequestType(request);
         ClassSchedule classSchedule;
         boolean requestOutcome;
         connected = true;
-        String errorMessage = "";
+        String responseMessage = "";
 
         switch (requestType) {
             case "add":
-                requestOutcome = controller.addClass(request);
-                return requestOutcome ? "true" : "false";
+                responseMessage = controller.addClass(request);
+                return responseMessage;
 
             case "remove":
-                requestOutcome = controller.removeClass(request);
-                return requestOutcome ? "true" : errorMessage;
+                responseMessage = controller.removeClass(request);
+                return responseMessage;
 
             case "display":
                 String[] parts = request.split(",");
                 String className = parts[1].trim();
-                String timetable = controller.displayTimetable(className);
-                System.out.println(timetable);
-
-                return timetable;
+                return controller.displayTimetable(className);
 
             case "close":
                 connected = false;
-                return closeConnection() ? "true" : "Failed to close connection";
+                return closeConnection();
 
             default:
                 return "Invalid request type";
         }
     }
 
-    private static boolean closeConnection() {
+    private static String closeConnection() {
         try {
             servSock.close();
-            return true;
+            return "Connection closed successfully!";
         } catch (IOException e) {
             System.out.println("Unable to close connection!");
-            return false;
+            return "Unable to close connection!";
         }
     }
 }

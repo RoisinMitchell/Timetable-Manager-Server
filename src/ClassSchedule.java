@@ -1,20 +1,19 @@
-import java.time.LocalDate;
 import java.time.LocalTime;
 
 public class ClassSchedule {
-    private String className; // LM051-2022
+    private String classId; // LM051-2022
     private String module; // CS4115
-    private String roomCode; // S205
+    private String room; // S205
     private LocalTime startTime; // 12:00
     private LocalTime endTime; // 13:00
-    private LocalDate date; // yyyy-mm-dd
+    private String day; // yyyy-mm-dd
 
-    public void setClassName(String className) {
-        this.className = className;
+    public void setClassId(String className) {
+        this.classId = className;
     }
 
-    public String getClassName() {
-        return this.className;
+    public String getClassId() {
+        return this.classId;
     }
 
     public void setModule(String module) {
@@ -25,12 +24,12 @@ public class ClassSchedule {
         return this.module;
     }
 
-    public void setRoomCode(String roomCode) {
-        this.roomCode = roomCode;
+    public void setRoom(String roomCode) {
+        this.room = roomCode;
     }
 
-    public String getRoomCode() {
-        return this.roomCode;
+    public String getRoom() {
+        return this.room;
     }
 
     public void setStartTime(LocalTime startTime) {
@@ -49,28 +48,24 @@ public class ClassSchedule {
         return this.endTime;
     }
 
-    public void setDate(LocalDate date) {
-        this.date = date;
+    public void setDay(String day){
+        this.day = day;
     }
 
-    public LocalDate getDate() {
-        return this.date;
-    }
-
-    public String getDayOfWeek() {
-        return this.date.getDayOfWeek().toString();
+    public String getDay(){
+        return this.day;
     }
 
     @Override
     public String toString() {
-        return this.className + ", " + this.module + ", " + this.roomCode + ", " + this.startTime + ", " + this.endTime + ", " + this.date;
+        return this.classId + " - " + this.module + " - " + this.room + " - " + this.startTime + " - " + this.endTime + " - " + this.day;
     }
 
     public boolean equals(ClassSchedule classSchedule) {
-        return this.getClassName().equals(classSchedule.getClassName()) &&
-                this.getModule().equals(classSchedule.getModule()) &&
-                this.getRoomCode().equals(classSchedule.getRoomCode()) &&
-                this.getDate().equals(classSchedule.getDate()) &&
+        return this.getClassId().equalsIgnoreCase(classSchedule.getClassId()) &&
+                this.getModule().equalsIgnoreCase(classSchedule.getModule()) &&
+                this.getRoom().equalsIgnoreCase(classSchedule.getRoom()) &&
+                this.getDay().equalsIgnoreCase(classSchedule.getDay()) &&
                 this.getStartTime().equals(classSchedule.getStartTime()) &&
                 this.getEndTime().equals(classSchedule.getEndTime());
     }
