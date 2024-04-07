@@ -1,60 +1,49 @@
 public class ApplicationController {
-
-    private Timetables timetables;
     private RequestParser parser;
-    private ClassScheduler classScheduler;
-    private boolean requestOutcome;
-    private Timetable timetable;
+    private ScheduleManager scheduleManager;
     private ClassSchedule classSchedule;
-    private String className;
+    private String responseMessage;
 
     public ApplicationController() {
-        timetables = new Timetables();
         parser = new RequestParser();
-        classScheduler = new ClassScheduler();
+        scheduleManager = new ScheduleManager();
     }
 
-    public boolean addClass(String request) throws IncorrectActionException {
+    public String addClass(String request) {
         classSchedule = parser.parseScheduleRequest(request);
-        className = classSchedule.getClassName();
 
-        timetable = timetables.getTimetable(className);
-
-        if (timetable == null) {
-            timetable = new Timetable();
-            timetable.setClassName(className);
-            timetables.addTimetable(timetable);
+        try {
+            responseMessage = scheduleManager.addClass(classSchedule);
+        } catch (IncorrectActionException e) {
+            responseMessage = e.message;
+            System.out.println("Error occurred:\n" + responseMessage); // Server app display
         }
 
-        requestOutcome = classScheduler.addClass(classSchedule);
-
-        if (requestOutcome) {
-            timetable.addClass(classSchedule);
-        }
-
-        return requestOutcome;
+        return responseMessage;
     }
 
-    public boolean removeClass(String request) throws IncorrectActionException {
+    public String removeClass(String request){
+
         classSchedule = parser.parseScheduleRequest(request);
-        className = classSchedule.getClassName();
-        timetable = timetables.getTimetable(className);
 
-        if (timetable == null) {
-            return false;
+        try {
+            responseMessage = scheduleManager.removeClass(classSchedule);
+        } catch (IncorrectActionException e) {
+            responseMessage = e.message;
+            System.out.println("Error occurred:\n" + responseMessage);
         }
 
-        requestOutcome = classScheduler.removeClass(classSchedule);
-
-        if (requestOutcome) {
-            timetable.removeClass(classSchedule);
-        }
-
-        return requestOutcome;
-
+        return responseMessage;
     }
 
     public String displayTimetable(String className) {
-        return timetables.displayTimetable(className);
+        try {
+            responseMessage = scheduleManager.displaySchedule(className);
+        } catch (IncorrectActionException e) {
+            responseMessage = e.message;
+            System.out.println("Error occurred:\n" + responseMessage);
+        }
+
+        return responseMessage;
     }
 }
