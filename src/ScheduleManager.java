@@ -37,7 +37,7 @@ public class ScheduleManager {
 
         for (ClassSchedule existingClass : classSchedules) {
             if (existingClass.equals(classSchedule)) {
-                classSchedules.remove(classSchedule);
+                classSchedules.remove(existingClass);
                 return "Request remove class successful";
             }
         }
