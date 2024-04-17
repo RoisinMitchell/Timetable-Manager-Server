@@ -1,33 +1,33 @@
-public class ApplicationController {
-    private RequestParser parser;
-    private ScheduleManager scheduleManager;
+public class TimetableManagerController {
+    private final RequestParser parser;
+    private final TimetableManagerModel timetableManagerModel;
     private ClassSchedule classSchedule;
-    private String responseMessage;
 
-    public ApplicationController() {
+    public TimetableManagerController() {
         parser = new RequestParser();
-        scheduleManager = new ScheduleManager();
+        timetableManagerModel = new TimetableManagerModel();
     }
 
     public String addClass(String request) {
         classSchedule = parser.parseScheduleRequest(request);
+        String responseMessage;
 
         try {
-            responseMessage = scheduleManager.addClass(classSchedule);
+            responseMessage = timetableManagerModel.addClass(classSchedule);
         } catch (IncorrectActionException e) {
             responseMessage = e.message;
-            System.out.println("Error occurred:\n" + responseMessage); // Server app display
+            System.out.println("Error occurred:\n" + responseMessage);
         }
 
         return responseMessage;
     }
 
     public String removeClass(String request){
-
         classSchedule = parser.parseScheduleRequest(request);
+        String responseMessage;
 
         try {
-            responseMessage = scheduleManager.removeClass(classSchedule);
+            responseMessage = timetableManagerModel.removeClass(classSchedule);
         } catch (IncorrectActionException e) {
             responseMessage = e.message;
             System.out.println("Error occurred:\n" + responseMessage);
@@ -37,13 +37,20 @@ public class ApplicationController {
     }
 
     public String displayTimetable(String className) {
+        String responseMessage;
         try {
-            responseMessage = scheduleManager.displaySchedule(className);
+            responseMessage = timetableManagerModel.displaySchedule(className);
         } catch (IncorrectActionException e) {
             responseMessage = e.message;
             System.out.println("Error occurred:\n" + responseMessage);
         }
 
+        return responseMessage;
+    }
+
+    public String requestEarlyLectures(String courseID){
+        String responseMessage;
+        responseMessage = timetableManagerModel.requestEarlyScheduling(courseID);
         return responseMessage;
     }
 }
