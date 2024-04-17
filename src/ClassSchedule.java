@@ -1,3 +1,4 @@
+import java.time.Duration;
 import java.time.LocalTime;
 
 public class ClassSchedule {
@@ -7,6 +8,7 @@ public class ClassSchedule {
     private LocalTime startTime; // 12:00
     private LocalTime endTime; // 13:00
     private String day; // yyyy-mm-dd
+    private int duration;
 
     public void setClassId(String className) {
         this.classId = className;
@@ -56,17 +58,15 @@ public class ClassSchedule {
         return this.day;
     }
 
+    public int getDuration(){
+        Duration durationObject = Duration.between(startTime, endTime);
+        return (int) durationObject.toMinutes();
+    }
+
+
     @Override
     public String toString() {
         return this.classId + " - " + this.module + " - " + this.room + " - " + this.startTime + " - " + this.endTime + " - " + this.day;
     }
 
-    public boolean equals(ClassSchedule classSchedule) {
-        return this.getClassId().equalsIgnoreCase(classSchedule.getClassId()) &&
-                this.getModule().equalsIgnoreCase(classSchedule.getModule()) &&
-                this.getRoom().equalsIgnoreCase(classSchedule.getRoom()) &&
-                this.getDay().equalsIgnoreCase(classSchedule.getDay()) &&
-                this.getStartTime().equals(classSchedule.getStartTime()) &&
-                this.getEndTime().equals(classSchedule.getEndTime());
-    }
 }
