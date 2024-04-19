@@ -1,6 +1,5 @@
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveAction;
 
@@ -50,22 +49,24 @@ public class TimetableManagerModel {
     public String requestEarlyScheduling(String courseID) {
         synchronized (classSchedules) {
             ForkJoinPool pool = new ForkJoinPool();
-            pool.invoke(new EarlySchedulesShiftTask(0, classSchedules.size(), classSchedules));
+            pool.invoke(new EarlySchedulesShiftTask(0, classSchedules.size(), classSchedules, courseID));
             pool.shutdown();
             return "Request early scheduling successful!";
         }
     }
 
-    private class EarlySchedulesShiftTask extends RecursiveAction {
-        private final int threshold = 1; // Threshold for sublist size
+    public class EarlySchedulesShiftTask extends RecursiveAction {
+        private final int threshold = 4; // Threshold for sublist size
         private final int start;
         private final int end;
         private final ArrayList<ClassSchedule> schedules;
+        private final String courseID;
 
-        public EarlySchedulesShiftTask(int start, int end, ArrayList<ClassSchedule> schedules) {
+        public EarlySchedulesShiftTask(int start, int end, ArrayList<ClassSchedule> schedules, String courseID) {
             this.start = start;
             this.end = end;
             this.schedules = schedules;
+            this.courseID = courseID;
         }
 
         @Override
@@ -76,8 +77,8 @@ public class TimetableManagerModel {
             } else {
                 int middle = start + length / 2;
                 invokeAll(
-                        new EarlySchedulesShiftTask(start, middle, schedules),
-                        new EarlySchedulesShiftTask(middle, end, schedules)
+                        new EarlySchedulesShiftTask(start, middle, schedules, courseID),
+                        new EarlySchedulesShiftTask(middle, end, schedules, courseID)
                 );
             }
         }
@@ -85,39 +86,27 @@ public class TimetableManagerModel {
         private void processSchedules() {
             for (int i = start; i < end; i++) {
                 ClassSchedule schedule = schedules.get(i);
-                synchronized (schedule) {
-                    // Calculate duration
-                    long duration = schedule.getEndTime().toSecondOfDay() - schedule.getStartTime().toSecondOfDay();
+                if (schedule.getClassId().equalsIgnoreCase(courseID)) {
+                    synchronized (schedule) {
+                        long duration = schedule.getDuration();
 
-                    // Check room availability
-                    boolean roomAvailable = isRoomAvailable(schedule.getRoom(), schedule.getStartTime(), duration);
-
-                    // If room is available, assign early morning timeslot
-                    if (roomAvailable) {
-                        LocalTime earlyMorningStartTime = LocalTime.of(9, 0);
-                        schedule.setStartTime(earlyMorningStartTime);
-                        schedule.setEndTime(earlyMorningStartTime.plusSeconds(duration));
+                        // Find earliest available time slot
+                        LocalTime earliestStartTime = findEarliestStartTime(schedule.getRoom(), duration);
+                        schedule.setStartTime(earliestStartTime);
+                        schedule.setEndTime(earliestStartTime.plusMinutes(duration));
                     }
                 }
             }
         }
 
-        private boolean isRoomAvailable(String room, LocalTime startTime, long duration) {
+        private LocalTime findEarliestStartTime(String room, long duration) {
+            LocalTime earliestStartTime = LocalTime.of(9, 0); // Start from 9:00 AM
             for (ClassSchedule existingSchedule : schedules) {
-                synchronized (existingSchedule) {
-                    // Check if the existing schedule is for the same room
-                    if (existingSchedule.getRoom().equals(room)) {
-                        // Calculate the end time of the existing schedule
-                        LocalTime existingEndTime = existingSchedule.getEndTime();
-
-                        // Check for overlap between existing schedule and the given timeslot
-                        if (existingEndTime.isAfter(startTime) && existingSchedule.getStartTime().isBefore(startTime.plusSeconds(duration))) {
-                            return false; // Room is not available for the entire duration
-                        }
-                    }
+                if (existingSchedule.getRoom().equals(room) && existingSchedule.getStartTime().equals(earliestStartTime)) {
+                    earliestStartTime = existingSchedule.getEndTime();
                 }
             }
-            return true; // Room is available for the entire duration
+            return earliestStartTime;
         }
     }
 

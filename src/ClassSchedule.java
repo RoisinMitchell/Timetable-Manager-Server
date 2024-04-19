@@ -2,20 +2,32 @@ import java.time.Duration;
 import java.time.LocalTime;
 
 public class ClassSchedule {
-    private String classId; // LM051-2022
+    private String courseID; // LM051-2022
     private String module; // CS4115
     private String room; // S205
     private LocalTime startTime; // 12:00
     private LocalTime endTime; // 13:00
     private String day; // yyyy-mm-dd
-    private int duration;
+
+    public ClassSchedule(String courseID, String module, String room, LocalTime startTime, LocalTime endTime, String day){
+        this.courseID = courseID;
+        this.module = module;
+        this.room = room;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.day = day;
+    }
+
+    public ClassSchedule(){
+
+    }
 
     public void setClassId(String className) {
-        this.classId = className;
+        this.courseID = className;
     }
 
     public String getClassId() {
-        return this.classId;
+        return this.courseID;
     }
 
     public void setModule(String module) {
@@ -58,15 +70,14 @@ public class ClassSchedule {
         return this.day;
     }
 
-    public int getDuration(){
+    public long getDuration(){
         Duration durationObject = Duration.between(startTime, endTime);
-        return (int) durationObject.toMinutes();
+        return durationObject.toMinutes();
     }
-
 
     @Override
     public String toString() {
-        return this.classId + " - " + this.module + " - " + this.room + " - " + this.startTime + " - " + this.endTime + " - " + this.day;
+        return this.courseID + " - " + this.module + " - " + this.room + " - " + this.startTime + " - " + this.endTime + " - " + this.day;
     }
 
 }
