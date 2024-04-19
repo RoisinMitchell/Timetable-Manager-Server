@@ -93,6 +93,8 @@ public class TimetableManagerView {
             RequestParser parser = new RequestParser();
             String requestType = parser.getRequestType(request);
             String responseMessage;
+            String[] parts;
+            String courseID;
 
             switch (requestType) {
                 case "add":
@@ -104,15 +106,15 @@ public class TimetableManagerView {
                     break;
 
                 case "display":
-                    String[] parts = request.split(",");
-                    String courseID = parts[1].trim();
+                    parts = request.split(",");
+                    courseID = parts[1].trim();
                     responseMessage = controller.displayTimetable(courseID);
                     break;
 
                 case "early":
-                    String[] parts2 = request.split(",");
-                    String classID = parts2[1].trim();
-                    responseMessage = controller.requestEarlyLectures(classID);
+                    parts = request.split(",");
+                    courseID = parts[1].trim();
+                    responseMessage = controller.requestEarlyLectures(courseID);
                     break;
 
                 case "close":

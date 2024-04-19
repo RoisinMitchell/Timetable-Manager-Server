@@ -44,7 +44,6 @@ public class TimetableManagerController {
             responseMessage = e.message;
             System.out.println("Error occurred:\n" + responseMessage);
         }
-
         return responseMessage;
     }
 
