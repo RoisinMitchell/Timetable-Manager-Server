@@ -62,7 +62,7 @@ public class TimetableManagerView {
                         String request = dataInputStream.readUTF(); // Read client request
                         String response = processRequest(request); // Process request
                         dataOutputStream.writeUTF(response); // Send response to client
-                        System.out.println("Response sent: " + response + "\n"); // Log response
+                        System.out.println("Response sent:\n" + response + "\n"); // Log response
                     } catch (EOFException e) {
                         // Client closed connection
                         System.out.println("Client disconnected.");
@@ -98,7 +98,7 @@ public class TimetableManagerView {
 
             switch (requestType) {
                 case "add":
-                    responseMessage = controller.addClass(request);
+                    responseMessage = controller.addSchedule(request);
                     break;
 
                 case "remove":
