@@ -1,15 +1,16 @@
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalTime;
 
-public class ClassSchedule {
-    private String courseID; // LM051-2022
-    private String module; // CS4115
-    private String room; // S205
-    private LocalTime startTime; // 12:00
-    private LocalTime endTime; // 13:00
-    private String day; // yyyy-mm-dd
+public class ScheduleModel {
+    private String courseID;
+    private String module;
+    private String room;
+    private LocalTime startTime;
+    private LocalTime endTime;
+    private DayOfWeek day;
 
-    public ClassSchedule(String courseID, String module, String room, LocalTime startTime, LocalTime endTime, String day){
+    public ScheduleModel(String courseID, String module, String room, DayOfWeek day, LocalTime startTime, LocalTime endTime){
         this.courseID = courseID;
         this.module = module;
         this.room = room;
@@ -18,15 +19,15 @@ public class ClassSchedule {
         this.day = day;
     }
 
-    public ClassSchedule(){
+    public ScheduleModel(){
 
     }
 
-    public void setClassId(String className) {
-        this.courseID = className;
+    public void setCourseID(String courseID) {
+        this.courseID = courseID;
     }
 
-    public String getClassId() {
+    public String getCourseID() {
         return this.courseID;
     }
 
@@ -62,22 +63,33 @@ public class ClassSchedule {
         return this.endTime;
     }
 
-    public void setDay(String day){
+    public void setDay(DayOfWeek day){
         this.day = day;
     }
 
-    public String getDay(){
+    public DayOfWeek getDay(){
         return this.day;
     }
 
     public long getDuration(){
-        Duration durationObject = Duration.between(startTime, endTime);
-        return durationObject.toMinutes();
+        Duration duration = Duration.between(startTime, endTime);
+        return duration.toMinutes();
     }
 
     @Override
     public String toString() {
         return this.courseID + " - " + this.module + " - " + this.room + " - " + this.startTime + " - " + this.endTime + " - " + this.day;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        ScheduleModel schedule = (ScheduleModel) object;
+        return courseID.equals(schedule.courseID) &&
+                module.equals(schedule.module) &&
+                room.equals(schedule.room) &&
+                day.equals(schedule.day) &&
+                startTime.equals(schedule.startTime) &&
+                endTime.equals(schedule.endTime);
     }
 
 }

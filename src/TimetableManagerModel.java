@@ -1,119 +1,155 @@
+import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveAction;
 
 public class TimetableManagerModel {
-    private final ArrayList<ClassSchedule> classSchedules;
+    private final Map<DayOfWeek, Map<String, List<ScheduleModel>>> schedules;
 
     public TimetableManagerModel() {
-        this.classSchedules = new ArrayList<>();
+        this.schedules = new LinkedHashMap<>();
+
+        for (DayOfWeek day : DayOfWeek.values()) {
+            schedules.put(day, new HashMap<>());
+        }
     }
 
-    public String addClass(ClassSchedule classSchedule) throws IncorrectActionException {
-        synchronized (classSchedules) {
-            for (ClassSchedule existingClass : classSchedules) {
-                if (isOverlap(existingClass, classSchedule)) {
+    public String addSchedule(ScheduleModel schedule) throws IncorrectActionException {
+        synchronized (schedules) {
+            String courseID = schedule.getCourseID();
+            DayOfWeek day = schedule.getDay();
+
+            // Checking for overlap within the same day and for the same courseID
+            Map<String, List<ScheduleModel>> schedulesByDay = schedules.get(day);
+            List<ScheduleModel> schedulesByCourseID = schedulesByDay.getOrDefault(courseID, new ArrayList<>());
+
+            for (ScheduleModel bookedSchedule : schedulesByCourseID) {
+                if (isOverlap(bookedSchedule, schedule)) {
                     throw new IncorrectActionException("The room is not available for this time!");
                 }
             }
-            classSchedules.add(classSchedule);
+
+            schedulesByCourseID.add(schedule);
+            schedulesByDay.put(courseID, schedulesByCourseID);
+            schedules.put(day, schedulesByDay);
         }
         return "Request add class successful!";
     }
 
-    public String removeClass(ClassSchedule classSchedule) throws IncorrectActionException {
-        synchronized (classSchedules) {
-            if (classSchedules.remove(classSchedule)) {
+    public String removeSchedule(ScheduleModel schedule) throws IncorrectActionException {
+        synchronized (schedules) {
+            String courseID = schedule.getCourseID();
+            DayOfWeek dayOfWeek = schedule.getDay();
+
+            Map<String, List<ScheduleModel>> schedulesByDay = schedules.get(dayOfWeek);
+            List<ScheduleModel> schedulesByCourseID = schedulesByDay.get(courseID);
+
+            if (schedulesByCourseID != null && schedulesByCourseID.remove(schedule)) {
                 return "Request remove class successful";
             }
         }
         throw new IncorrectActionException("The schedule does not exist!");
     }
 
-    public String displaySchedule(String classId) throws IncorrectActionException {
-        synchronized (classSchedules) {
+    public String displaySchedules(String courseID) throws IncorrectActionException {
+        synchronized (schedules) {
             StringBuilder schedule = new StringBuilder();
-            for (ClassSchedule existingClass : classSchedules) {
-                if (existingClass.getClassId().equalsIgnoreCase(classId)) {
+            boolean foundSchedule = false;
+
+            for (Map<String, List<ScheduleModel>> schedulesByDay : schedules.values()) {
+                List<ScheduleModel> schedulesForCourse = schedulesByDay.getOrDefault(courseID, new ArrayList<>());
+
+                for (ScheduleModel existingClass : schedulesForCourse) {
                     schedule.append(existingClass.toString()).append("\n");
+                    foundSchedule = true;
                 }
             }
-            if (schedule.isEmpty()) {
-                throw new IncorrectActionException("The schedule is empty, cannot display");
+
+            if (!foundSchedule) {
+                throw new IncorrectActionException("No schedule found!");
             }
+
             return schedule.toString();
         }
     }
 
     public String requestEarlyScheduling(String courseID) {
-        synchronized (classSchedules) {
+        synchronized (schedules) {
             ForkJoinPool pool = new ForkJoinPool();
-            pool.invoke(new EarlySchedulesShiftTask(0, classSchedules.size(), classSchedules, courseID));
+            for (DayOfWeek day : DayOfWeek.values()) {
+                pool.invoke(new EarlyScheduling(courseID, day));
+            }
             pool.shutdown();
             return "Request early scheduling successful!";
         }
     }
 
-    public class EarlySchedulesShiftTask extends RecursiveAction {
-        private final int threshold = 4; // Threshold for sublist size
-        private final int start;
-        private final int end;
-        private final ArrayList<ClassSchedule> schedules;
+    public class EarlyScheduling extends RecursiveAction {
         private final String courseID;
+        private final DayOfWeek day;
 
-        public EarlySchedulesShiftTask(int start, int end, ArrayList<ClassSchedule> schedules, String courseID) {
-            this.start = start;
-            this.end = end;
-            this.schedules = schedules;
+        public EarlyScheduling(String courseID, DayOfWeek day) {
             this.courseID = courseID;
+            this.day = day;
         }
 
         @Override
         protected void compute() {
-            int length = end - start;
-            if (length <= threshold) {
-                processSchedules();
-            } else {
-                int middle = start + length / 2;
-                invokeAll(
-                        new EarlySchedulesShiftTask(start, middle, schedules, courseID),
-                        new EarlySchedulesShiftTask(middle, end, schedules, courseID)
-                );
+            Map<String, List<ScheduleModel>> schedulesByDay = schedules.get(day);
+            List<ScheduleModel> schedulesForCourse = schedulesByDay.getOrDefault(courseID, new ArrayList<>());
+
+            LocalTime startTime = LocalTime.of(9, 0);
+            LocalTime endTime = LocalTime.of(13, 0);
+
+            // Finding early times
+            for (ScheduleModel existingClass : schedulesForCourse) {
+                if (existingClass.getStartTime().isAfter(startTime) && existingClass.getEndTime().isBefore(endTime)) {
+                    return;
+                }
             }
-        }
 
-        private void processSchedules() {
-            for (int i = start; i < end; i++) {
-                ClassSchedule schedule = schedules.get(i);
-                if (schedule.getClassId().equalsIgnoreCase(courseID)) {
-                    synchronized (schedule) {
-                        long duration = schedule.getDuration();
+            // If there is early slot shift classes
+            List<ScheduleModel> newSchedulesByCourse = new ArrayList<>();
+            LocalTime newStartTime = startTime;
 
-                        // Find earliest available time slot
-                        LocalTime earliestStartTime = findEarliestStartTime(schedule.getRoom(), duration);
-                        schedule.setStartTime(earliestStartTime);
-                        schedule.setEndTime(earliestStartTime.plusMinutes(duration));
+            for (ScheduleModel bookedSchedule : schedulesForCourse) {
+                LocalTime newEndTime = newStartTime.plusMinutes(bookedSchedule.getDuration());
+                if (newEndTime.isAfter(endTime)) {
+                    newEndTime = endTime;
+                }
+
+                // Check availability at new time
+                boolean isRoomAvailable = true;
+                for (ScheduleModel schedule : newSchedulesByCourse) {
+                    if (isOverlap(schedule, new ScheduleModel(bookedSchedule.getCourseID(), bookedSchedule.getModule(), bookedSchedule.getRoom(), day, newStartTime, newEndTime))) {
+                        isRoomAvailable = false;
+                        break;
                     }
                 }
-            }
-        }
 
-        private LocalTime findEarliestStartTime(String room, long duration) {
-            LocalTime earliestStartTime = LocalTime.of(9, 0); // Start from 9:00 AM
-            for (ClassSchedule existingSchedule : schedules) {
-                if (existingSchedule.getRoom().equals(room) && existingSchedule.getStartTime().equals(earliestStartTime)) {
-                    earliestStartTime = existingSchedule.getEndTime();
+                if (isRoomAvailable) {
+                    // Add the class to the new schedule
+                    ScheduleModel newSchedule = new ScheduleModel(bookedSchedule.getCourseID(), bookedSchedule.getModule(), bookedSchedule.getRoom(), day, newStartTime, newEndTime);
+                    newSchedulesByCourse.add(newSchedule);
+
+                    // Update start time for the next class
+                    newStartTime = newEndTime;
                 }
             }
-            return earliestStartTime;
+
+            // Replace old schedules with the new schedules
+            schedulesByDay.put(courseID, newSchedulesByCourse);
+            schedules.put(day, schedulesByDay);
         }
     }
 
-    // Method to check if two class schedules overlap
-    private boolean isOverlap(ClassSchedule existingClass, ClassSchedule newClass) {
+    private boolean isOverlap(ScheduleModel existingClass, ScheduleModel newClass) {
         return existingClass.getRoom().equalsIgnoreCase(newClass.getRoom()) &&
-                existingClass.getDay().equalsIgnoreCase(newClass.getDay()) &&
                 existingClass.getEndTime().isAfter(newClass.getStartTime()) &&
                 existingClass.getStartTime().isBefore(newClass.getEndTime());
     }

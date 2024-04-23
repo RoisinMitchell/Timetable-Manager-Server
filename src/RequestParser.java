@@ -1,3 +1,4 @@
+import java.time.DayOfWeek;
 import java.time.LocalTime;
 
 public class RequestParser {
@@ -7,19 +8,19 @@ public class RequestParser {
         return parts[0].trim();
     }
 
-    public ClassSchedule parseScheduleRequest(String clientRequest){
+    public ScheduleModel parseScheduleRequest(String clientRequest){
 
-        ClassSchedule classSchedule = new ClassSchedule();
+        ScheduleModel schedule = new ScheduleModel();
         String[] scheduleParts = clientRequest.split(",");
 
-        classSchedule.setClassId(scheduleParts[1].trim());
-        classSchedule.setModule(scheduleParts[2].trim());
-        classSchedule.setRoom(scheduleParts[3].trim());
-        classSchedule.setStartTime(parseTime(scheduleParts[4].trim()));
-        classSchedule.setEndTime(parseTime(scheduleParts[5].trim()));
-        classSchedule.setDay(scheduleParts[6].trim());
+        schedule.setCourseID(scheduleParts[1].trim());
+        schedule.setModule(scheduleParts[2].trim());
+        schedule.setRoom(scheduleParts[3].trim());
+        schedule.setStartTime(parseTime(scheduleParts[4].trim()));
+        schedule.setEndTime(parseTime(scheduleParts[5].trim()));
+        schedule.setDay(DayOfWeek.valueOf(scheduleParts[6].trim().toUpperCase()));
 
-        return classSchedule;
+        return schedule;
     }
 
     private LocalTime parseTime(String timeString) {

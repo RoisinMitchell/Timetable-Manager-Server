@@ -1,19 +1,19 @@
 public class TimetableManagerController {
     private final RequestParser parser;
     private final TimetableManagerModel timetableManagerModel;
-    private ClassSchedule classSchedule;
+    private ScheduleModel schedule;
 
     public TimetableManagerController() {
         parser = new RequestParser();
         timetableManagerModel = new TimetableManagerModel();
     }
 
-    public String addClass(String request) {
-        classSchedule = parser.parseScheduleRequest(request);
+    public String addSchedule(String request) {
+        schedule = parser.parseScheduleRequest(request);
         String responseMessage;
 
         try {
-            responseMessage = timetableManagerModel.addClass(classSchedule);
+            responseMessage = timetableManagerModel.addSchedule(schedule);
         } catch (IncorrectActionException e) {
             responseMessage = e.message;
             System.out.println("Error occurred:\n" + responseMessage);
@@ -23,11 +23,11 @@ public class TimetableManagerController {
     }
 
     public String removeClass(String request){
-        classSchedule = parser.parseScheduleRequest(request);
+        schedule = parser.parseScheduleRequest(request);
         String responseMessage;
 
         try {
-            responseMessage = timetableManagerModel.removeClass(classSchedule);
+            responseMessage = timetableManagerModel.removeSchedule(schedule);
         } catch (IncorrectActionException e) {
             responseMessage = e.message;
             System.out.println("Error occurred:\n" + responseMessage);
@@ -39,7 +39,7 @@ public class TimetableManagerController {
     public String displayTimetable(String className) {
         String responseMessage;
         try {
-            responseMessage = timetableManagerModel.displaySchedule(className);
+            responseMessage = timetableManagerModel.displaySchedules(className);
         } catch (IncorrectActionException e) {
             responseMessage = e.message;
             System.out.println("Error occurred:\n" + responseMessage);
