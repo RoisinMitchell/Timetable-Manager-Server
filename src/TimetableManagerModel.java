@@ -107,46 +107,43 @@ public class TimetableManagerModel {
             LocalTime startTime = LocalTime.of(9, 0);
             LocalTime endTime = LocalTime.of(13, 0);
 
-            // Finding early times
-            for (ScheduleModel existingClass : schedulesForCourse) {
-                if (existingClass.getStartTime().isAfter(startTime) && existingClass.getEndTime().isBefore(endTime)) {
-                    return;
-                }
-            }
+            // If the earliest start time is within the range and not already at 9:00, move classes to the earliest time slot
+            if (!schedulesForCourse.isEmpty()) {
+                // If there is an early slot, shift classes
+                List<ScheduleModel> newSchedulesByCourse = new ArrayList<>();
+                LocalTime newStartTime = startTime;
 
-            // If there is early slot shift classes
-            List<ScheduleModel> newSchedulesByCourse = new ArrayList<>();
-            LocalTime newStartTime = startTime;
+                for (ScheduleModel bookedSchedule : schedulesForCourse) {
+                    LocalTime newEndTime = newStartTime.plusMinutes(bookedSchedule.getDuration());
+                    if (newEndTime.isAfter(endTime)) {
+                        newEndTime = endTime;
+                    }
 
-            for (ScheduleModel bookedSchedule : schedulesForCourse) {
-                LocalTime newEndTime = newStartTime.plusMinutes(bookedSchedule.getDuration());
-                if (newEndTime.isAfter(endTime)) {
-                    newEndTime = endTime;
-                }
+                    // Check availability at new time
+                    boolean isRoomAvailable = true;
+                    for (ScheduleModel schedule : newSchedulesByCourse) {
+                        if (isOverlap(schedule, new ScheduleModel(bookedSchedule.getCourseID(), bookedSchedule.getModule(), bookedSchedule.getRoom(), day, newStartTime, newEndTime))) {
+                            isRoomAvailable = false;
+                            break;
+                        }
+                    }
 
-                // Check availability at new time
-                boolean isRoomAvailable = true;
-                for (ScheduleModel schedule : newSchedulesByCourse) {
-                    if (isOverlap(schedule, new ScheduleModel(bookedSchedule.getCourseID(), bookedSchedule.getModule(), bookedSchedule.getRoom(), day, newStartTime, newEndTime))) {
-                        isRoomAvailable = false;
-                        break;
+                    if (isRoomAvailable) {
+                        // Add the class to the new schedule
+                        ScheduleModel newSchedule = new ScheduleModel(bookedSchedule.getCourseID(), bookedSchedule.getModule(), bookedSchedule.getRoom(), day, newStartTime, newEndTime);
+                        newSchedulesByCourse.add(newSchedule);
+
+                        // Update start time for the next class
+                        newStartTime = newEndTime;
                     }
                 }
 
-                if (isRoomAvailable) {
-                    // Add the class to the new schedule
-                    ScheduleModel newSchedule = new ScheduleModel(bookedSchedule.getCourseID(), bookedSchedule.getModule(), bookedSchedule.getRoom(), day, newStartTime, newEndTime);
-                    newSchedulesByCourse.add(newSchedule);
-
-                    // Update start time for the next class
-                    newStartTime = newEndTime;
-                }
+                // Replace old schedules with the new schedules
+                schedulesByDay.put(courseID, newSchedulesByCourse);
+                schedules.put(day, schedulesByDay);
             }
-
-            // Replace old schedules with the new schedules
-            schedulesByDay.put(courseID, newSchedulesByCourse);
-            schedules.put(day, schedulesByDay);
         }
+
     }
 
     private boolean isOverlap(ScheduleModel existingClass, ScheduleModel newClass) {
