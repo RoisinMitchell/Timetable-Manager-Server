@@ -1,10 +1,6 @@
 import java.time.DayOfWeek;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveAction;
 
@@ -61,8 +57,13 @@ public class TimetableManagerModel {
             StringBuilder schedule = new StringBuilder();
             boolean foundSchedule = false;
 
-            for (Map<String, List<ScheduleModel>> schedulesByDay : schedules.values()) {
+            // Iterate over the days of the week in the correct order
+            for (DayOfWeek day : DayOfWeek.values()) {
+                Map<String, List<ScheduleModel>> schedulesByDay = schedules.get(day);
                 List<ScheduleModel> schedulesForCourse = schedulesByDay.getOrDefault(courseID, new ArrayList<>());
+
+                // Sort schedules by start time
+                schedulesForCourse.sort(Comparator.comparing(ScheduleModel::getStartTime));
 
                 for (ScheduleModel existingClass : schedulesForCourse) {
                     schedule.append(existingClass.toString()).append("\n");
