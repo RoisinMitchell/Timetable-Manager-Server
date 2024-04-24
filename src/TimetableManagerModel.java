@@ -26,7 +26,7 @@ public class TimetableManagerModel {
 
             for (ScheduleModel bookedSchedule : schedulesByCourseID) {
                 if (isOverlap(bookedSchedule, schedule)) {
-                    throw new IncorrectActionException("There is an overlap in bookings!");
+                    throw new IncorrectActionException("ERROR - There is an overlap in bookings!");
                 }
             }
 
@@ -49,11 +49,18 @@ public class TimetableManagerModel {
                 return "Request remove class successful";
             }
         }
-        throw new IncorrectActionException("The schedule does not exist!");
+        throw new IncorrectActionException("ERROR - The schedule does not exist!");
     }
 
     public String displaySchedules(String courseID) throws IncorrectActionException {
         synchronized (schedules) {
+            boolean courseExists = schedules.values().stream()
+                    .anyMatch(daySchedules -> daySchedules.containsKey(courseID));
+
+            if (!courseExists) {
+                throw new IncorrectActionException("ERROR - Course ID does not exist!");
+            }
+
             StringBuilder schedule = new StringBuilder();
             boolean foundSchedule = false;
 
@@ -72,15 +79,22 @@ public class TimetableManagerModel {
             }
 
             if (!foundSchedule) {
-                throw new IncorrectActionException("No schedule found!");
+                throw new IncorrectActionException("ERROR - No schedule found!");
             }
 
             return schedule.toString();
         }
     }
 
-    public String requestEarlyScheduling(String courseID) {
+    public String requestEarlyScheduling(String courseID) throws IncorrectActionException {
         synchronized (schedules) {
+            boolean courseExists = schedules.values().stream()
+                    .anyMatch(daySchedules -> daySchedules.containsKey(courseID));
+
+            if (!courseExists) {
+                throw new IncorrectActionException("ERROR - Course ID does not exist!");
+            }
+
             ForkJoinPool pool = new ForkJoinPool();
             for (DayOfWeek day : DayOfWeek.values()) {
                 pool.invoke(new EarlyScheduling(courseID, day));
@@ -143,7 +157,6 @@ public class TimetableManagerModel {
                 schedules.put(day, schedulesByDay);
             }
         }
-
     }
 
     private boolean isOverlap(ScheduleModel existingClass, ScheduleModel newClass) {
