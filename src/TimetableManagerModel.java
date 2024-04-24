@@ -26,7 +26,7 @@ public class TimetableManagerModel {
 
             for (ScheduleModel bookedSchedule : schedulesByCourseID) {
                 if (isOverlap(bookedSchedule, schedule)) {
-                    throw new IncorrectActionException("The room is not available for this time!");
+                    throw new IncorrectActionException("There is an overlap in bookings!");
                 }
             }
 
@@ -66,7 +66,7 @@ public class TimetableManagerModel {
                 schedulesForCourse.sort(Comparator.comparing(ScheduleModel::getStartTime));
 
                 for (ScheduleModel existingClass : schedulesForCourse) {
-                    schedule.append(existingClass.toString()).append("\n");
+                    schedule.append(existingClass.toString()).append("-");
                     foundSchedule = true;
                 }
             }
