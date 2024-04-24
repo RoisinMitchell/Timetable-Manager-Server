@@ -78,7 +78,7 @@ public class ScheduleModel {
 
     @Override
     public String toString() {
-        return this.courseID + " - " + this.module + " - " + this.room + " - " + this.startTime + " - " + this.endTime + " - " + this.day;
+        return this.courseID + "," + this.module + "," + this.room + "," + this.startTime + "," + this.endTime + "," + this.day;
     }
 
     @Override
