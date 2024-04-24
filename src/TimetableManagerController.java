@@ -16,7 +16,7 @@ public class TimetableManagerController {
             responseMessage = timetableManagerModel.addSchedule(schedule);
         } catch (IncorrectActionException e) {
             responseMessage = e.message;
-            System.out.println("Error occurred:\n" + responseMessage);
+            System.out.println(responseMessage);
         }
 
         return responseMessage;
@@ -30,7 +30,7 @@ public class TimetableManagerController {
             responseMessage = timetableManagerModel.removeSchedule(schedule);
         } catch (IncorrectActionException e) {
             responseMessage = e.message;
-            System.out.println("Error occurred:\n" + responseMessage);
+            System.out.println(responseMessage);
         }
 
         return responseMessage;
@@ -42,14 +42,19 @@ public class TimetableManagerController {
             responseMessage = timetableManagerModel.displaySchedules(className);
         } catch (IncorrectActionException e) {
             responseMessage = e.message;
-            System.out.println("Error occurred:\n" + responseMessage);
+            System.out.println(responseMessage);
         }
         return responseMessage;
     }
 
-    public String requestEarlyLectures(String courseID){
+    public String requestEarlyLectures(String courseID) {
         String responseMessage;
-        responseMessage = timetableManagerModel.requestEarlyScheduling(courseID);
+        try {
+            responseMessage = timetableManagerModel.requestEarlyScheduling(courseID);
+        } catch (IncorrectActionException e){
+            responseMessage = e.message;
+            System.out.println(responseMessage);
+        }
         return responseMessage;
     }
 }

@@ -62,7 +62,7 @@ public class TimetableManagerView {
                         String request = dataInputStream.readUTF(); // Read client request
                         String response = processRequest(request); // Process request
                         dataOutputStream.writeUTF(response); // Send response to client
-                        System.out.println("Response sent:\n" + response + "\n"); // Log response
+                        System.out.println("Response sent:\n    " + response + "\n"); // Log response
                     } catch (EOFException e) {
                         // Client closed connection
                         System.out.println("Client disconnected.");
@@ -89,7 +89,7 @@ public class TimetableManagerView {
         }
 
         // Process client request and generate response
-        private static String processRequest(String request) {
+        private static String processRequest(String request){
             RequestParser parser = new RequestParser();
             String requestType = parser.getRequestType(request);
             String responseMessage;
@@ -123,7 +123,7 @@ public class TimetableManagerView {
                     break;
 
                 default:
-                    responseMessage = "Invalid request type";
+                    responseMessage = "ERROR - Invalid request type";
                     break;
             }
 
