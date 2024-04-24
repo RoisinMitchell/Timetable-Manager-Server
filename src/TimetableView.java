@@ -3,23 +3,28 @@ import java.net.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class TimetableManagerView {
+public class TimetableView {
+    // Define constants for the port number and maximum number of threads
     private static final int PORT = 1234;
+    private static final int MAX_THREADS = 100;
+
+    // Declare variables for the server socket, connection status, and controller
     private static ServerSocket servSock;
     private static boolean connected;
-    private static TimetableManagerController controller;
-
-    private static final int MAX_THREADS = 10;
+    private static TimetableController controller;
 
     public static void main(String[] args) {
         try {
-            System.out.println("\nOpening port...\n");
+            // Initialize the server socket and controller
             servSock = new ServerSocket(PORT);
-            controller = new TimetableManagerController();
-            ExecutorService executor = Executors.newFixedThreadPool(MAX_THREADS);
-            connected = true; // Set connected to true initially
+            System.out.println("Server started on port " + PORT);
+            controller = new TimetableController();
 
-            // Added a shutdown hook
+            // Create a thread pool with a fixed number of threads
+            ExecutorService executor = Executors.newFixedThreadPool(MAX_THREADS);
+            connected = true;
+
+            // Add a shutdown hook to close the server and executor when the program exits
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 connected = false; // Signal to stop accepting new connections
                 executor.shutdown(); // Initiate shutdown of the ExecutorService
@@ -32,6 +37,7 @@ public class TimetableManagerView {
 
             while (connected) { // Continuously accept new client connections
                 Socket socket = servSock.accept(); // Accept incoming client connection
+                System.out.println("Accepted new client connection from " + socket.getInetAddress() + "\n");
                 executor.submit(new ClientHandler(socket)); // Start a new thread to handle client
             }
         } catch (IOException e) {
@@ -60,9 +66,10 @@ public class TimetableManagerView {
                 while (true) {
                     try {
                         String request = dataInputStream.readUTF(); // Read client request
+                        System.out.println("Received request:\n     " + request + "\n");
                         String response = processRequest(request); // Process request
                         dataOutputStream.writeUTF(response); // Send response to client
-                        System.out.println("Response sent:\n    " + response + "\n"); // Log response
+                        System.out.println("Response sent:\n     " + response + "\n"); // Log response
                     } catch (EOFException e) {
                         // Client closed connection
                         System.out.println("Client disconnected.");
@@ -99,31 +106,37 @@ public class TimetableManagerView {
             switch (requestType) {
                 case "add":
                     responseMessage = controller.addSchedule(request);
+                    System.out.println("Added schedule:\n    " + request + "\n");
                     break;
 
                 case "remove":
                     responseMessage = controller.removeClass(request);
+                    System.out.println("Removed schedule:\n     " + request + "\n");
                     break;
 
                 case "display":
                     parts = request.split(",");
                     courseID = parts[1].trim();
                     responseMessage = controller.displayTimetable(courseID);
+                    System.out.println("Displayed timetable for course: " + courseID + "\n");
                     break;
 
                 case "early":
                     parts = request.split(",");
                     courseID = parts[1].trim();
                     responseMessage = controller.requestEarlyLectures(courseID);
+                    System.out.println("Requested early lectures for course: " + courseID + "\n");
                     break;
 
                 case "close":
                     connected = false; // Stop accepting new connections
                     responseMessage = closeConnection(); // Close server
+                    System.out.println("Server connection closed" + "\n");
                     break;
 
                 default:
                     responseMessage = "ERROR - Invalid request type";
+                    System.out.println("Received invalid request type" + "\n");
                     break;
             }
 
@@ -136,7 +149,7 @@ public class TimetableManagerView {
                 servSock.close(); // Close server socket
                 return "Connection closed successfully!";
             } catch (IOException e) {
-                System.out.println("Unable to close connection!");
+                System.out.println("Unable to close connection!" + "\n");
                 return "Unable to close connection!";
             }
         }
