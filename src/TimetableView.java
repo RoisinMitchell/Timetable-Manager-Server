@@ -4,39 +4,37 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class TimetableView {
-    // Define constants for the port number and maximum number of threads
     private static final int PORT = 1234;
-    private static final int MAX_THREADS = 100;
-
-    // Declare variables for the server socket, connection status, and controller
     private static ServerSocket servSock;
     private static boolean connected;
     private static TimetableController controller;
 
     public static void main(String[] args) {
         try {
-            // Initialize the server socket and controller
+            // Initialising the server socket and controller
             servSock = new ServerSocket(PORT);
             System.out.println("Server started on port " + PORT);
             controller = new TimetableController();
 
-            // Create a thread pool with a fixed number of threads
-            ExecutorService executor = Executors.newFixedThreadPool(MAX_THREADS);
+            // Creating a thread pool to handle multiple clients
+            ExecutorService executor = Executors.newCachedThreadPool();
             connected = true;
 
-            // Add a shutdown hook to close the server and executor when the program exits
+            // Shutdown hook to close the server and executor when the program exits
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                connected = false; // Signal to stop accepting new connections
-                executor.shutdown(); // Initiate shutdown of the ExecutorService
+                connected = false;
+                executor.shutdown();
+
                 try {
-                    servSock.close(); // Close the server socket
+                    servSock.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
             }));
 
             while (connected) { // Continuously accept new client connections
-                Socket socket = servSock.accept(); // Accept incoming client connection
+                Socket socket = servSock.accept();
                 System.out.println("Accepted new client connection from " + socket.getInetAddress() + "\n");
                 executor.submit(new ClientHandler(socket)); // Start a new thread to handle client
             }
@@ -47,7 +45,6 @@ public class TimetableView {
         }
     }
 
-    // Runnable class to handle individual client connections
     private static class ClientHandler implements Runnable {
         private final Socket socket;
 
@@ -66,20 +63,19 @@ public class TimetableView {
                 while (true) {
                     try {
                         String request = dataInputStream.readUTF(); // Read client request
-                        System.out.println("Received request:\n     " + request + "\n");
+                        System.out.println("Received request from thread " + Thread.currentThread().getName().toUpperCase() + ":\n     " + request + "\n");
+
                         String response = processRequest(request); // Process request
                         dataOutputStream.writeUTF(response); // Send response to client
-                        System.out.println("Response sent:\n     " + response + "\n"); // Log response
+                        System.out.println("Response sent from thread " + Thread.currentThread().getName().toUpperCase() + ":\n     " + response + "\n");
                     } catch (EOFException e) {
-                        // Client closed connection
                         System.out.println("Client disconnected.");
-                        break; // Exit the loop
+                        break;
                     } catch (SocketException e) {
-                        break; // Exit the loop
+                        break;
                     } catch (IOException e) {
-                        // Handle other I/O exceptions
                         e.printStackTrace();
-                        break; // Exit the loop
+                        break;
                     }
                 }
             } catch (IOException e) {
@@ -140,7 +136,7 @@ public class TimetableView {
                     break;
             }
 
-            return responseMessage; // Return response to client
+            return responseMessage;
         }
 
         // Close server connection

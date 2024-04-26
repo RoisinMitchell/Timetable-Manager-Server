@@ -1,65 +1,67 @@
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TimetableModelTest {
-    private TimetableModel timetableModel;
+class TimetableModelTest {
+    private TimetableModel timetable;
 
     @BeforeEach
-    public void setup() {
-        timetableModel = new TimetableModel();
+    void setUp() {
+        timetable = new TimetableModel();
     }
 
     @Test
-    public void addScheduleSuccessfully() {
+    void addingNonOverlappingScheduleIsSuccessful() throws IncorrectActionException {
         ScheduleModel schedule = new ScheduleModel("CS101", "Intro to CS", "Room 101", DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
-        assertDoesNotThrow(() -> timetableModel.addSchedule(schedule));
+        assertEquals("Request add class successful!", timetable.addSchedule(schedule));
     }
 
     @Test
-    public void addScheduleWithOverlapThrowsException() throws IncorrectActionException {
-        ScheduleModel schedule1 = new ScheduleModel("CS101", "Intro to CS", "Room 101", DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
-        ScheduleModel schedule2 = new ScheduleModel("CS102", "Data Structures", "Room 101", DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
-        timetableModel.addSchedule(schedule1);
-        assertThrows(IncorrectActionException.class, () -> timetableModel.addSchedule(schedule2));
-    }
-
-    @Test
-    public void removeExistingScheduleSuccessfully() throws IncorrectActionException {
+    void addingOverlappingScheduleThrowsException() throws IncorrectActionException {
         ScheduleModel schedule = new ScheduleModel("CS101", "Intro to CS", "Room 101", DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
-        timetableModel.addSchedule(schedule);
-        assertDoesNotThrow(() -> timetableModel.removeSchedule(schedule));
+        timetable.addSchedule(schedule);
+        ScheduleModel overlappingSchedule = new ScheduleModel("CS102", "Data Structures", "Room 101", DayOfWeek.MONDAY, LocalTime.of(10, 30), LocalTime.of(11, 30));
+        assertThrows(IncorrectActionException.class, () -> timetable.addSchedule(overlappingSchedule));
     }
 
     @Test
-    public void removeNonExistingScheduleThrowsException() {
+    void removingExistingScheduleIsSuccessful() throws IncorrectActionException {
         ScheduleModel schedule = new ScheduleModel("CS101", "Intro to CS", "Room 101", DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
-        assertThrows(IncorrectActionException.class, () -> timetableModel.removeSchedule(schedule));
+        timetable.addSchedule(schedule);
+        assertEquals("Request remove class successful", timetable.removeSchedule(schedule));
     }
 
     @Test
-    public void displaySchedulesForExistingCourse() throws IncorrectActionException {
+    void removingNonExistingScheduleThrowsException() {
         ScheduleModel schedule = new ScheduleModel("CS101", "Intro to CS", "Room 101", DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
-        timetableModel.addSchedule(schedule);
-        assertDoesNotThrow(() -> timetableModel.displaySchedules("CS101"));
+        assertThrows(IncorrectActionException.class, () -> timetable.removeSchedule(schedule));
     }
 
     @Test
-    public void displaySchedulesForNonExistingCourseThrowsException() {
-        assertThrows(IncorrectActionException.class, () -> timetableModel.displaySchedules("CS101"));
-    }
-
-    @Test
-    public void requestEarlySchedulingForExistingCourse() throws IncorrectActionException {
+    void displayingSchedulesForExistingCourseIsSuccessful() throws IncorrectActionException {
         ScheduleModel schedule = new ScheduleModel("CS101", "Intro to CS", "Room 101", DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
-        timetableModel.addSchedule(schedule);
-        assertDoesNotThrow(() -> timetableModel.requestEarlyScheduling("CS101"));
+        timetable.addSchedule(schedule);
+        assertDoesNotThrow(() -> timetable.displaySchedules("CS101"));
     }
 
     @Test
-    public void requestEarlySchedulingForNonExistingCourseThrowsException() {
-        assertThrows(IncorrectActionException.class, () -> timetableModel.requestEarlyScheduling("CS101"));
+    void displayingSchedulesForNonExistingCourseThrowsException() {
+        assertThrows(IncorrectActionException.class, () -> timetable.displaySchedules("CS101"));
+    }
+
+    @Test
+    void requestingEarlySchedulingForExistingCourseIsSuccessful() throws IncorrectActionException {
+        ScheduleModel schedule = new ScheduleModel("CS101", "Intro to CS", "Room 101", DayOfWeek.MONDAY, LocalTime.of(10, 0), LocalTime.of(11, 0));
+        timetable.addSchedule(schedule);
+        assertDoesNotThrow(() -> timetable.requestEarlyScheduling("CS101"));
+    }
+
+    @Test
+    void requestingEarlySchedulingForNonExistingCourseThrowsException() {
+        assertThrows(IncorrectActionException.class, () -> timetable.requestEarlyScheduling("CS101"));
     }
 }
