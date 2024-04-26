@@ -6,7 +6,7 @@ public class RequestParser {
     // Method to extract the request type from the client request
     public String getRequestType(String clientRequest){
         String[] parts = clientRequest.split(","); // Split the request into parts
-        return parts[0].trim(); // Return the first part as the request type (The request type is always the first part)
+        return parts[0].trim();
     }
 
     // Method to parse a schedule request from the client
